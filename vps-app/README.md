@@ -47,7 +47,7 @@
 ## 🚀 Installation rapide (VPS Ubuntu/Debian)
 
 ```bash
-git clone https://github.com/VOTRE-USER/fbdown-pro.git
+git clone https://github.com/jeandenis001234-boop/fbdown-pro.git
 cd fbdown-pro
 sudo bash install.sh
 ```
