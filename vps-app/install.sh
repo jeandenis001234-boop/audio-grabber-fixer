@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ================================================================
-#  FBDown Pro — Installateur automatique VPS
+#  Audio Grabber Fixer — Installateur automatique VPS
 #  Ubuntu/Debian · Node.js + yt-dlp + ffmpeg + nginx + certbot
 # ================================================================
 set -e
@@ -19,6 +19,9 @@ CHECK="${GREEN}✓${RESET}"
 CROSS="${RED}✗${RESET}"
 ARROW="${PURPLE}➜${RESET}"
 DOT="${CYAN}•${RESET}"
+APP_NAME="Audio Grabber Fixer"
+SERVICE_NAME="audio-grabber-fixer"
+INSTALL_LOG="/tmp/audio-grabber-fixer-install.log"
 
 # ---------- Helpers ----------
 banner() {
@@ -31,7 +34,7 @@ ${PURPLE}${BOLD}
     ██╔══╝  ██╔══██╗██║  ██║██║   ██║██║███╗██║██║╚██╗██║    ██╔═══╝ ██╔══██╗██║   ██║
     ██║     ██████╔╝██████╔╝╚██████╔╝╚███╔███╔╝██║ ╚████║    ██║     ██║  ██║╚██████╔╝
     ╚═╝     ╚═════╝ ╚═════╝  ╚═════╝  ╚══╝╚══╝ ╚═╝  ╚═══╝    ╚═╝     ╚═╝  ╚═╝ ╚═════╝
-${RESET}${GRAY}                    Facebook Video Downloader · API + Web Panel · v1.0${RESET}
+${RESET}${GRAY}                    audio-grabber-fixer · API + Web Panel · v1.1${RESET}
 ${GRAY}       ────────────────────────────────────────────────────────────────${RESET}
 
 EOF
@@ -82,8 +85,8 @@ spinner() {
 }
 run_spin() {
   local msg=$1; shift
-  ("$@" >/tmp/fbdown-install.log 2>&1) & spinner $! "$msg"
-  wait $! || { cat /tmp/fbdown-install.log; fail "Échec: $msg"; }
+  ("$@" >"$INSTALL_LOG" 2>&1) & spinner $! "$msg"
+  wait $! || { cat "$INSTALL_LOG"; fail "Échec: $msg"; }
 }
 
 require_root() {
@@ -99,8 +102,17 @@ get_public_ip() {
 check_dns() {
   local domain=$1 expected_ip=$2
   local resolved
-  resolved=$(dig +short A "$domain" @1.1.1.1 | tail -n1)
+  resolved=$(resolve_domain "$domain")
   [[ "$resolved" == "$expected_ip" ]]
+}
+
+resolve_domain() {
+  local domain=$1 resolved=""
+  resolved=$(getent ahostsv4 "$domain" 2>/dev/null | awk '{print $1; exit}')
+  if [[ -z "$resolved" ]] && command -v dig >/dev/null 2>&1; then
+    resolved=$(dig +short A "$domain" @1.1.1.1 | tail -n1)
+  fi
+  echo "$resolved"
 }
 
 # ================================================================
@@ -124,7 +136,7 @@ close
 
 # --- Options d'installation ---
 section "Configuration de l'installation"
-INSTALL_DIR=$(ask "Dossier d'installation" "/opt/fbdown-pro")
+INSTALL_DIR=$(ask "Dossier d'installation" "/opt/audio-grabber-fixer")
 APP_PORT=$(ask "Port interne de l'application" "3000")
 
 echo "${BOLD}│${RESET}"
@@ -144,7 +156,7 @@ ADMIN_EMAIL_LE=""
 if [[ "$INSTALL_NGINX" == "true" ]]; then
   echo "${BOLD}│${RESET}"
   ask_yn "Configurer HTTPS/SSL avec Let's Encrypt ?" y && INSTALL_SSL=true || INSTALL_SSL=false
-  DOMAIN=$(ask "Nom de domaine (ex: fbdown.example.com)" "")
+  DOMAIN=$(ask "Nom de domaine (ex: download.example.com)" "")
   [[ -z "$DOMAIN" ]] && fail "Domaine requis pour nginx."
   if [[ "$INSTALL_SSL" == "true" ]]; then
     ADMIN_EMAIL_LE=$(ask "Email pour Let's Encrypt (notifications)" "")
@@ -183,13 +195,10 @@ ask_yn "Continuer l'installation ?" y || { echo; echo "${YELLOW}Installation ann
 if [[ -n "$DOMAIN" && "$INSTALL_SSL" == "true" ]]; then
   section "Vérification DNS"
   step "Résolution de $DOMAIN"
-  if ! command -v dig >/dev/null 2>&1; then
-    run_spin "Installation de dnsutils" apt-get install -y dnsutils
-  fi
   if check_dns "$DOMAIN" "$PUBLIC_IP"; then
     ok "Le domaine pointe bien sur $PUBLIC_IP"
   else
-    resolved=$(dig +short A "$DOMAIN" @1.1.1.1 | tail -n1)
+    resolved=$(resolve_domain "$DOMAIN")
     warn "Le domaine ne pointe pas sur ce VPS."
     info "IP attendue : ${BOLD}$PUBLIC_IP${RESET}"
     info "IP résolue  : ${BOLD}${resolved:-aucune}${RESET}"
@@ -226,7 +235,7 @@ section "Installation des dépendances système"
 step "Mise à jour APT"
 run_spin "apt-get update" apt-get update -qq
 
-PKGS="curl wget git build-essential python3 python3-pip ffmpeg ca-certificates"
+PKGS="curl wget git rsync build-essential python3 python3-pip ffmpeg ca-certificates"
 [[ "$INSTALL_NGINX" == "true" ]] && PKGS="$PKGS nginx"
 [[ "$INSTALL_SSL" == "true" ]] && PKGS="$PKGS certbot python3-certbot-nginx"
 
@@ -247,7 +256,7 @@ ok "yt-dlp $(/usr/local/bin/yt-dlp --version)"
 close
 
 # --- Copie des fichiers ---
-section "Installation de FBDown Pro"
+section "Installation de $APP_NAME"
 step "Création du dossier $INSTALL_DIR"
 mkdir -p "$INSTALL_DIR"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -289,7 +298,7 @@ ADMIN_PASSWORD_HASH=$ADMIN_HASH
 WEBPANEL_ENABLED=$INSTALL_WEBPANEL
 ADMIN_PANEL_ENABLED=$INSTALL_ADMIN
 
-SITE_NAME=FBDown Pro
+SITE_NAME=Audio Grabber Fixer
 SITE_DESCRIPTION=Télécharger les vidéos Facebook en MP4 HD et MP3 gratuitement
 
 RATE_LIMIT_WINDOW_MS=900000
@@ -372,10 +381,15 @@ close
 
 # --- Service systemd ---
 section "Configuration du service systemd"
-step "Création de fbdown.service"
-cat > /etc/systemd/system/fbdown.service <<UNIT
+if systemctl list-unit-files | grep -q '^fbdown.service'; then
+  warn "Ancien service fbdown détecté : arrêt/désactivation pour éviter les conflits."
+  systemctl stop fbdown.service >/dev/null 2>&1 || true
+  systemctl disable fbdown.service >/dev/null 2>&1 || true
+fi
+step "Création de $SERVICE_NAME.service"
+cat > /etc/systemd/system/$SERVICE_NAME.service <<UNIT
 [Unit]
-Description=FBDown Pro — Facebook Video Downloader
+Description=Audio Grabber Fixer — Facebook Video Downloader
 After=network.target
 
 [Service]
@@ -386,7 +400,8 @@ ExecStart=/usr/bin/node $INSTALL_DIR/server.js
 Restart=always
 RestartSec=5
 StandardOutput=append:/var/log/fbdown.log
-StandardError=append:/var/log/fbdown.log
+StandardOutput=append:/var/log/audio-grabber-fixer.log
+StandardError=append:/var/log/audio-grabber-fixer.log
 Environment=NODE_ENV=production
 
 [Install]
@@ -394,13 +409,22 @@ WantedBy=multi-user.target
 UNIT
 
 run_spin "Rechargement systemd" systemctl daemon-reload
-run_spin "Activation du service" systemctl enable fbdown.service
-run_spin "Démarrage du service" systemctl restart fbdown.service
+run_spin "Activation du service" systemctl enable $SERVICE_NAME.service
+run_spin "Démarrage du service" systemctl restart $SERVICE_NAME.service
 sleep 2
-if systemctl is-active --quiet fbdown; then
+if systemctl is-active --quiet $SERVICE_NAME; then
   ok "Service démarré"
 else
-  fail "Le service n'a pas démarré. Logs: journalctl -u fbdown -n 50"
+  fail "Le service n'a pas démarré. Logs: journalctl -u $SERVICE_NAME -n 50"
+fi
+
+step "Contrôle local du site et des assets"
+if curl -fsS "http://127.0.0.1:$APP_PORT/api/health" >/tmp/audio-grabber-fixer-health.json 2>/dev/null && \
+   curl -fsS "http://127.0.0.1:$APP_PORT/css/style.css" >/dev/null 2>&1 && \
+   curl -fsS "http://127.0.0.1:$APP_PORT/js/app.js" >/dev/null 2>&1; then
+  ok "Site, CSS et JavaScript accessibles sur le port $APP_PORT"
+else
+  warn "Le serveur répond mal ou les assets CSS/JS sont introuvables. Vérifiez: journalctl -u $SERVICE_NAME -n 80"
 fi
 close
 
@@ -408,7 +432,8 @@ close
 if [[ "$INSTALL_NGINX" == "true" ]]; then
   section "Configuration nginx"
   step "Création du vhost pour $DOMAIN"
-  cat > /etc/nginx/sites-available/fbdown <<NGINX
+  rm -f /etc/nginx/sites-enabled/fbdown /etc/nginx/sites-available/fbdown
+  cat > /etc/nginx/sites-available/$SERVICE_NAME <<NGINX
 server {
     listen 80;
     listen [::]:80;
@@ -431,7 +456,7 @@ server {
     }
 }
 NGINX
-  ln -sf /etc/nginx/sites-available/fbdown /etc/nginx/sites-enabled/fbdown
+  ln -sf /etc/nginx/sites-available/$SERVICE_NAME /etc/nginx/sites-enabled/$SERVICE_NAME
   rm -f /etc/nginx/sites-enabled/default
 
   run_spin "Test de la configuration nginx" nginx -t
@@ -443,7 +468,11 @@ NGINX
     section "Certificat SSL Let's Encrypt"
     step "Obtention du certificat pour $DOMAIN"
     CERTBOT_EMAIL_ARG=""
-    [[ -n "$ADMIN_EMAIL_LE" ]] && CERTBOT_EMAIL_ARG="--email $ADMIN_EMAIL_LE"
+    if [[ -n "$ADMIN_EMAIL_LE" ]]; then
+      CERTBOT_EMAIL_ARG="--email $ADMIN_EMAIL_LE"
+    else
+      CERTBOT_EMAIL_ARG="--register-unsafely-without-email"
+    fi
     if certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos $CERTBOT_EMAIL_ARG --redirect 2>&1 | tee /tmp/fbdown-certbot.log; then
       ok "SSL activé — https://$DOMAIN"
     else
@@ -459,8 +488,13 @@ if command -v ufw >/dev/null 2>&1; then
   section "Firewall (UFW)"
   step "Ouverture des ports"
   ufw allow OpenSSH >/dev/null 2>&1 || true
-  ufw allow 'Nginx Full' >/dev/null 2>&1 || true
-  ok "Ports 22, 80, 443 ouverts"
+  if [[ "$INSTALL_NGINX" == "true" ]]; then
+    ufw allow 'Nginx Full' >/dev/null 2>&1 || true
+    ok "Ports 22, 80, 443 ouverts"
+  else
+    ufw allow "$APP_PORT/tcp" >/dev/null 2>&1 || true
+    ok "Ports 22 et $APP_PORT ouverts"
+  fi
   close
 fi
 
@@ -478,10 +512,10 @@ echo "  ${BOLD}Site public   :${RESET} ${CYAN}$PUBLIC_URL${RESET}"
 echo "  ${BOLD}Login admin   :${RESET} ${CYAN}$ADMIN_USER${RESET}"
 echo
 echo "${DIM}  Commandes utiles :${RESET}"
-echo "    ${GRAY}systemctl status fbdown${RESET}       ${DIM}# statut du service${RESET}"
-echo "    ${GRAY}journalctl -u fbdown -f${RESET}       ${DIM}# logs en direct${RESET}"
-echo "    ${GRAY}systemctl restart fbdown${RESET}      ${DIM}# redémarrer${RESET}"
+echo "    ${GRAY}systemctl status $SERVICE_NAME${RESET}       ${DIM}# statut du service${RESET}"
+echo "    ${GRAY}journalctl -u $SERVICE_NAME -f${RESET}       ${DIM}# logs en direct${RESET}"
+echo "    ${GRAY}systemctl restart $SERVICE_NAME${RESET}      ${DIM}# redémarrer${RESET}"
 echo "    ${GRAY}nano $INSTALL_DIR/.env${RESET}  ${DIM}# éditer la config${RESET}"
 echo
-echo "${DIM}  Log d'installation : /tmp/fbdown-install.log${RESET}"
+echo "${DIM}  Log d'installation : $INSTALL_LOG${RESET}"
 echo
