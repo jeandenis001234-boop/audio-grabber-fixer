@@ -20,6 +20,7 @@ function getVideoInfo(url) {
       '--no-playlist',
       '--dump-single-json',
       '--no-check-certificates',
+      ...ytdlpCookieArgs(),
       url,
     ];
     const proc = spawn(config.ytdlpBin, args, { timeout: 30000 });
