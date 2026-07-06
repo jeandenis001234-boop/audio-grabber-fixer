@@ -2,9 +2,50 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const { db } = require('../db');
 const { requireAdmin } = require('../middleware/auth');
+const cookiesUtil = require('../utils/cookies');
+const { getVideoInfo } = require('../utils/ytdlp');
 
 const router = express.Router();
 router.use(requireAdmin);
+
+// === Cookies Facebook (multi-format) ===
+router.get('/cookies', (req, res) => {
+  res.json(cookiesUtil.cookiesFileInfo());
+});
+
+router.post('/cookies', (req, res) => {
+  const { content } = req.body || {};
+  if (!content || typeof content !== 'string') {
+    return res.status(400).json({ error: 'Contenu des cookies requis.' });
+  }
+  try {
+    const info = cookiesUtil.saveCookies(content);
+    res.json({ ok: true, ...info });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.delete('/cookies', (req, res) => {
+  cookiesUtil.deleteCookies();
+  res.json({ ok: true });
+});
+
+// Teste les cookies en récupérant une URL Facebook publique de test
+router.post('/cookies/test', async (req, res) => {
+  const { url } = req.body || {};
+  const testUrl = (url && String(url).trim()) || 'https://www.facebook.com/facebook/videos';
+  if (!cookiesUtil.cookiesFileExists()) {
+    return res.status(400).json({ error: 'Aucun fichier cookies configuré.' });
+  }
+  try {
+    const info = await getVideoInfo(testUrl);
+    res.json({ ok: true, title: info.title, uploader: info.uploader });
+  } catch (e) {
+    res.status(200).json({ ok: false, error: e.message.slice(0, 400) });
+  }
+});
+
 
 // Dashboard stats
 router.get('/stats', (req, res) => {
