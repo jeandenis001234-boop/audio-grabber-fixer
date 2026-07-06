@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FBDown Pro — Téléchargeur de Vidéos Facebook en MP4 HD et MP3 gratuit</title>
+<meta name="description" content="Téléchargez gratuitement vos vidéos Facebook en MP4 haute qualité (1080p, 720p) ou MP3. Rapide, sécurisé, sans inscription. Le meilleur téléchargeur Facebook 2025." />
+<meta name="keywords" content="télécharger vidéo facebook, fb downloader, facebook mp4, facebook mp3, télécharger reel facebook, sauvegarder vidéo fb" />
+<meta name="robots" content="index, follow" />
+<meta name="author" content="FBDown Pro" />
+<link rel="canonical" href="/" />
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="FBDown Pro — Téléchargeur de Vidéos Facebook" />
+<meta property="og:description" content="Téléchargez vos vidéos Facebook en MP4 HD et MP3 gratuitement, sans inscription." />
+<meta property="og:url" content="/" />
+<meta property="og:image" content="/og-image.png" />
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="FBDown Pro — Téléchargeur Facebook" />
+<meta name="twitter:description" content="MP4 HD, MP3, sans inscription. Rapide et sécurisé." />
+
+<!-- JSON-LD -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "FBDown Pro",
+  "description": "Téléchargeur de vidéos Facebook en MP4 HD et MP3",
+  "applicationCategory": "MultimediaApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+  "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.9", "ratingCount": "12847" }
+}
+</script>
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+<!-- === NAVIGATION === -->
+<header class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="logo">
+      <span class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3v14m0 0l-5-5m5 5l5-5M5 21h14"/></svg>
+      </span>
+      <span class="logo-text">FBDown<span class="logo-accent">Pro</span></span>
+    </a>
+    <nav class="nav-links">
+      <a href="#downloader">Téléchargeur</a>
+      <a href="#features">Fonctionnalités</a>
+      <a href="#how">Comment ça marche</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <button class="menu-toggle" id="menuToggle" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- === HERO + DOWNLOADER === -->
+<section class="hero" id="downloader">
+  <div class="hero-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="grid-overlay"></div>
+  </div>
+
+  <div class="container">
+    <div class="hero-badge">
+      <span class="pulse-dot"></span>
+      100% gratuit · Sans inscription · Sans filigrane
+    </div>
+
+    <h1 class="hero-title">
+      Télécharger des vidéos <span class="gradient-text">Facebook</span><br>
+      en MP4 HD et MP3
+    </h1>
+
+    <p class="hero-subtitle">
+      Le téléchargeur Facebook le plus rapide et le plus complet. Collez un lien, choisissez la qualité, téléchargez.
+    </p>
+
+    <!-- Downloader card -->
+    <div class="downloader-card glass">
+      <div class="input-wrapper">
+        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+        <input type="url" id="urlInput" placeholder="Collez le lien de la vidéo Facebook ici..." autocomplete="off" />
+        <button class="btn-paste" id="pasteBtn" title="Coller">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/></svg>
+        </button>
+      </div>
+      <button class="btn-primary btn-download" id="fetchBtn">
+        <span class="btn-text">Télécharger</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+
+    <div class="hero-stats">
+      <div class="stat"><strong>12M+</strong><span>Téléchargements</span></div>
+      <div class="stat"><strong>4.9★</strong><span>Note utilisateurs</span></div>
+      <div class="stat"><strong>190+</strong><span>Pays</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- === RESULT PANEL === -->
+<section class="result-section" id="resultSection" hidden>
+  <div class="container">
+    <div class="result-card glass" id="resultCard">
+      <!-- Injecté par JS -->
+    </div>
+  </div>
+</section>
+
+<!-- === AD SLOT === -->
+<div class="ad-slot container" id="ad-top">
+  <!-- <ins class="adsbygoogle" ...></ins> -->
+</div>
+
+<!-- === FEATURES === -->
+<section class="features" id="features">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-eyebrow">Pourquoi FBDown Pro</span>
+      <h2>Tout ce dont vous avez besoin,<br>rien de superflu</h2>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon icon-purple">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <h3>Ultra rapide</h3>
+        <p>Serveurs optimisés pour un téléchargement en quelques secondes, même en HD.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon icon-cyan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h3>100% sécurisé</h3>
+        <p>HTTPS/SSL, aucune donnée conservée, aucun compte requis.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon icon-pink">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        </div>
+        <h3>MP4 & MP3</h3>
+        <p>Choisissez la vidéo en HD (1080p / 720p) ou extrayez uniquement l'audio en MP3.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon icon-green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        </div>
+        <h3>Multi-appareils</h3>
+        <p>Fonctionne sur mobile, tablette et ordinateur — Android, iOS, Windows, Mac.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon icon-orange">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <h3>Sans limite</h3>
+        <p>Téléchargez autant de vidéos que vous voulez, gratuitement.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon icon-blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        </div>
+        <h3>Meilleure qualité</h3>
+        <p>Récupère toujours la vidéo <strong>avec son</strong>, en meilleure qualité disponible.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- === HOW IT WORKS === -->
+<section class="how" id="how">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-eyebrow">Guide rapide</span>
+      <h2>3 étapes pour télécharger</h2>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Copiez le lien</h3>
+        <p>Depuis l'app Facebook ou le site : cliquez sur les 3 points → "Copier le lien".</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Collez-le ici</h3>
+        <p>Insérez le lien dans le champ ci-dessus et cliquez sur "Télécharger".</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Choisissez le format</h3>
+        <p>Sélectionnez MP4 (HD, SD) ou MP3 et le téléchargement démarre.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- === FAQ === -->
+<section class="faq" id="faq">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-eyebrow">Questions fréquentes</span>
+      <h2>Vous vous demandez peut-être...</h2>
+    </div>
+
+    <div class="faq-list">
+      <details class="faq-item">
+        <summary>FBDown Pro est-il vraiment gratuit ?</summary>
+        <p>Oui, 100% gratuit et sans limite. Aucune inscription requise.</p>
+      </details>
+      <details class="faq-item">
+        <summary>La vidéo téléchargée contient-elle le son ?</summary>
+        <p>Oui, contrairement à beaucoup d'outils, FBDown Pro fusionne toujours la piste vidéo avec la meilleure piste audio disponible grâce à ffmpeg.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Puis-je télécharger des vidéos privées ?</summary>
+        <p>Non. Seules les vidéos publiques sont téléchargeables, conformément aux conditions d'utilisation de Facebook.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Est-ce sécurisé ?</summary>
+        <p>Oui. Aucun fichier n'est stocké sur nos serveurs, tout est streamé directement vers votre appareil via HTTPS.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Quels formats et qualités sont disponibles ?</summary>
+        <p>MP4 en 1080p, 720p, 480p, 360p et MP3 en 128 kbps et 320 kbps.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Ça marche sur mobile ?</summary>
+        <p>Oui, l'interface est 100% responsive et compatible iOS et Android.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- === CTA === -->
+<section class="cta-bottom">
+  <div class="container">
+    <div class="cta-card glass">
+      <h2>Prêt à télécharger votre première vidéo ?</h2>
+      <p>Retournez en haut, collez votre lien, c'est parti.</p>
+      <a href="#downloader" class="btn-primary">Commencer maintenant</a>
+    </div>
+  </div>
+</section>
+
+<!-- === FOOTER === -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <div class="logo">
+          <span class="logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3v14m0 0l-5-5m5 5l5-5M5 21h14"/></svg>
+          </span>
+          <span class="logo-text">FBDown<span class="logo-accent">Pro</span></span>
+        </div>
+        <p class="footer-desc">Le téléchargeur de vidéos Facebook le plus rapide et le plus fiable. 100% gratuit.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Produit</h4>
+        <a href="#downloader">Téléchargeur</a>
+        <a href="#features">Fonctionnalités</a>
+        <a href="#faq">FAQ</a>
+      </div>
+      <div class="footer-col">
+        <h4>Légal</h4>
+        <a href="/legal/terms.html">Conditions d'utilisation</a>
+        <a href="/legal/privacy.html">Politique de confidentialité</a>
+        <a href="/legal/cookies.html">Politique cookies</a>
+        <a href="/legal/dmca.html">DMCA</a>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <a href="/legal/contact.html">Nous contacter</a>
+        <a href="/legal/about.html">À propos</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© <span id="year"></span> FBDown Pro. Tous droits réservés. Ce site n'est ni affilié ni associé à Facebook / Meta Platforms, Inc.</p>
+    </div>
+  </div>
+</footer>
+
+<!-- Cookie banner -->
+<div class="cookie-banner" id="cookieBanner" hidden>
+  <div class="container cookie-inner">
+    <p>🍪 Nous utilisons des cookies pour améliorer votre expérience et afficher des publicités personnalisées. En continuant, vous acceptez notre <a href="/legal/cookies.html">politique cookies</a>.</p>
+    <div class="cookie-actions">
+      <button class="btn-ghost" id="cookieRefuse">Refuser</button>
+      <button class="btn-primary" id="cookieAccept">Accepter</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+</body>
+</html>
