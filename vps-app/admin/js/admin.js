@@ -272,6 +272,128 @@
       };
     },
 
+    async cookies() {
+      viewContainer.innerHTML = '<p class="empty">Chargement...</p>';
+      const info = await api('/admin/cookies');
+      const status = info.exists
+        ? (info.hasSessionCookies
+            ? `<span class="badge badge-success">✓ Session valide</span>`
+            : `<span class="badge badge-failed">⚠ Cookies incomplets (c_user/xs manquants)</span>`)
+        : `<span class="badge badge-failed">✗ Aucun cookie configuré</span>`;
+      const details = info.exists ? `
+        <table style="width:100%;font-size:13px;margin-top:8px">
+          <tr><td style="color:var(--text-mute);padding:4px 0">Fichier</td><td><code>${escapeHtml(info.path)}</code></td></tr>
+          <tr><td style="color:var(--text-mute);padding:4px 0">Cookies</td><td>${info.cookieCount}</td></tr>
+          <tr><td style="color:var(--text-mute);padding:4px 0">Expirés</td><td>${info.expired > 0 ? `<span style="color:var(--danger)">${info.expired}</span>` : '0'}</td></tr>
+          <tr><td style="color:var(--text-mute);padding:4px 0">Modifié le</td><td>${new Date(info.modified).toLocaleString('fr')}</td></tr>
+          <tr><td style="color:var(--text-mute);padding:4px 0">Taille</td><td>${info.size} octets</td></tr>
+        </table>` : '';
+
+      viewContainer.innerHTML = `
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">🍪 État actuel</span>
+            ${status}
+          </div>
+          ${details}
+          ${info.exists ? '<div class="form-actions" style="margin-top:16px"><button class="btn-sm btn-danger" id="delCookies">Supprimer les cookies</button> <button class="btn-sm" id="testCookies" style="background:var(--surface-2);color:var(--text)">Tester</button></div>' : ''}
+          <div id="testResult" style="margin-top:12px"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">📥 Importer des cookies</span></div>
+          <p style="color:var(--text-dim);font-size:13px;margin:0 0 12px">
+            Collez vos cookies Facebook dans <strong>n'importe lequel</strong> de ces formats — le format est détecté automatiquement :
+          </p>
+
+          <div class="tabs" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+            <button class="tab-btn active" data-tab="netscape">Netscape (.txt)</button>
+            <button class="tab-btn" data-tab="json">JSON (extensions)</button>
+            <button class="tab-btn" data-tab="header">Header string</button>
+            <button class="tab-btn" data-tab="file">Fichier</button>
+          </div>
+
+          <div id="tab-help" style="background:var(--surface-2);border-radius:8px;padding:12px;font-size:12px;color:var(--text-dim);margin-bottom:12px"></div>
+
+          <div class="form-group">
+            <label>Contenu des cookies</label>
+            <textarea id="cookiesInput" rows="10" placeholder="Collez ici..." style="width:100%;font-family:monospace;font-size:12px;padding:10px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:8px;resize:vertical"></textarea>
+          </div>
+          <input type="file" id="cookiesFile" accept=".txt,.json" style="display:none">
+          <div class="form-actions" style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn-primary" style="width:auto;margin:0;padding:10px 20px;height:auto" id="importCookies">Importer</button>
+            <button class="btn-sm" id="pickFile" style="background:var(--surface-2);color:var(--text)">Choisir un fichier</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">❓ Comment obtenir vos cookies Facebook</span></div>
+          <ol style="color:var(--text-dim);font-size:13px;line-height:1.8;padding-left:20px">
+            <li>Installez l'extension <strong>"Get cookies.txt LOCALLY"</strong> (Chrome/Firefox — gratuite, open source).</li>
+            <li>Connectez-vous à <a href="https://www.facebook.com" target="_blank" style="color:var(--primary)">facebook.com</a> avec un compte dédié (recommandé, pas votre compte principal).</li>
+            <li>Cliquez sur l'icône de l'extension → <strong>Export</strong> (format Netscape ou JSON).</li>
+            <li>Collez le contenu ci-dessus, ou uploadez le fichier téléchargé.</li>
+          </ol>
+          <p style="color:var(--warning);font-size:12px;margin-top:8px">
+            ⚠️ Les cookies donnent accès à votre compte. Utilisez un compte Facebook dédié à cet usage. Le fichier est stocké en <code>chmod 600</code> sur le serveur.
+          </p>
+        </div>
+      `;
+
+      const helpTexts = {
+        netscape: 'Fichier commençant par <code># Netscape HTTP Cookie File</code>. Généré par yt-dlp ou l\'extension "Get cookies.txt LOCALLY". Format tabulé : domain\\tflag\\tpath\\tsecure\\texpires\\tname\\tvalue',
+        json: 'Tableau JSON exporté par <strong>EditThisCookie</strong>, <strong>Cookie-Editor</strong> ou "Get cookies.txt" (mode JSON). Ex: <code>[{"domain":".facebook.com","name":"c_user","value":"...","expirationDate":123}]</code>',
+        header: 'Chaîne copiée depuis DevTools → Network → Headers → Cookie. Ex: <code>c_user=100012345; xs=xxx:yyy:zzz; datr=abc123; fr=xyz</code>. Fonctionne aussi avec "Copy as cURL".',
+        file: 'Uploadez directement un fichier <code>cookies.txt</code> (Netscape) ou <code>.json</code> exporté depuis votre navigateur.',
+      };
+      const help = document.getElementById('tab-help');
+      const setTab = (t) => {
+        document.querySelectorAll('.tab-btn').forEach((b) => b.classList.toggle('active', b.dataset.tab === t));
+        help.innerHTML = helpTexts[t];
+      };
+      setTab('netscape');
+      document.querySelectorAll('.tab-btn').forEach((b) => b.onclick = () => setTab(b.dataset.tab));
+
+      $('#pickFile').onclick = () => $('#cookiesFile').click();
+      $('#cookiesFile').onchange = async (e) => {
+        const f = e.target.files[0];
+        if (!f) return;
+        $('#cookiesInput').value = await f.text();
+        toast('Fichier chargé — cliquez sur Importer', 'success');
+      };
+
+      $('#importCookies').onclick = async () => {
+        const content = $('#cookiesInput').value.trim();
+        if (!content) return toast('Contenu vide', 'error');
+        try {
+          const r = await api('/admin/cookies', { method: 'POST', body: { content } });
+          toast(`${r.imported} cookies importés`, 'success');
+          views.cookies();
+        } catch (e) { toast(e.message, 'error'); }
+      };
+
+      if (info.exists) {
+        $('#delCookies').onclick = async () => {
+          if (!confirm('Supprimer les cookies Facebook ?')) return;
+          await api('/admin/cookies', { method: 'DELETE' });
+          toast('Cookies supprimés', 'success');
+          views.cookies();
+        };
+        $('#testCookies').onclick = async () => {
+          const box = $('#testResult');
+          box.innerHTML = '<p class="empty">Test en cours...</p>';
+          try {
+            const r = await api('/admin/cookies/test', { method: 'POST', body: {} });
+            if (r.ok) {
+              box.innerHTML = `<div style="padding:12px;background:rgba(46,204,113,0.1);border:1px solid var(--success);border-radius:8px;font-size:13px">✓ Cookies fonctionnels — récupéré : <strong>${escapeHtml(r.title || '(sans titre)')}</strong></div>`;
+            } else {
+              box.innerHTML = `<div style="padding:12px;background:rgba(231,76,60,0.1);border:1px solid var(--danger);border-radius:8px;font-size:13px">✗ Échec : ${escapeHtml(r.error)}</div>`;
+            }
+          } catch (e) { box.innerHTML = `<div style="color:var(--danger);font-size:13px">${escapeHtml(e.message)}</div>`; }
+        };
+      }
+    },
+
     async settings() {
       viewContainer.innerHTML = '<p class="empty">Chargement...</p>';
       const s = await api('/admin/settings');
