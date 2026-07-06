@@ -399,7 +399,6 @@ WorkingDirectory=$INSTALL_DIR
 ExecStart=/usr/bin/node $INSTALL_DIR/server.js
 Restart=always
 RestartSec=5
-StandardOutput=append:/var/log/fbdown.log
 StandardOutput=append:/var/log/audio-grabber-fixer.log
 StandardError=append:/var/log/audio-grabber-fixer.log
 Environment=NODE_ENV=production
