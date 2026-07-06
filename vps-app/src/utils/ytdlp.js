@@ -1,4 +1,6 @@
 const { spawn } = require('child_process');
+const fs = require('fs');
+const path = require('path');
 const config = require('../config');
 const logger = require('./logger');
 const { ytdlpCookieArgs } = require('./cookies');
@@ -95,6 +97,10 @@ function buildFormatList(formats) {
  */
 function streamDownload({ url, format, quality, res, onEnd }) {
   const isAudio = format === 'mp3';
+  const jobId = `download-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const tmpDir = path.resolve(config.downloadTmpDir);
+  fs.mkdirSync(tmpDir, { recursive: true });
+  const outputTemplate = path.join(tmpDir, `${jobId}.%(ext)s`);
   let args;
 
   if (isAudio) {
@@ -108,7 +114,7 @@ function streamDownload({ url, format, quality, res, onEnd }) {
       '--audio-format', 'mp3',
       '--audio-quality', quality === '128' ? '5' : '0', // 0 = best (~192-320k)
       '--ffmpeg-location', config.ffmpegBin,
-      '-o', '-',
+      '-o', outputTemplate,
       url,
     ];
   } else {
@@ -123,12 +129,12 @@ function streamDownload({ url, format, quality, res, onEnd }) {
       '-f', selector,
       '--merge-output-format', 'mp4',
       '--ffmpeg-location', config.ffmpegBin,
-      '-o', '-',
+      '-o', outputTemplate,
       url,
     ];
   }
 
-  logger.info('yt-dlp', args.join(' '));
+  logger.info('yt-dlp', args.map((a) => (String(a).includes('cookies') ? '[cookies]' : a)).join(' '));
   const proc = spawn(config.ytdlpBin, args, { timeout: config.downloadTimeoutMs });
 
   let errBuf = '';
@@ -137,10 +143,29 @@ function streamDownload({ url, format, quality, res, onEnd }) {
     // Log en debug seulement (yt-dlp est verbeux)
   });
 
-  proc.stdout.pipe(res);
+  proc.stdout.on('data', () => {});
+
+  function cleanup() {
+    try {
+      for (const file of fs.readdirSync(tmpDir)) {
+        if (file.startsWith(jobId)) fs.unlinkSync(path.join(tmpDir, file));
+      }
+    } catch {}
+  }
+
+  function findOutputFile() {
+    const files = fs
+      .readdirSync(tmpDir)
+      .filter((file) => file.startsWith(jobId))
+      .map((file) => path.join(tmpDir, file))
+      .filter((file) => fs.statSync(file).isFile() && fs.statSync(file).size > 0);
+    const preferredExt = isAudio ? '.mp3' : '.mp4';
+    return files.find((file) => file.endsWith(preferredExt)) || files[0];
+  }
 
   proc.on('error', (e) => {
     logger.error('spawn error:', e.message);
+    cleanup();
     if (!res.headersSent) res.status(500).json({ error: 'Erreur lors du téléchargement.' });
     if (onEnd) onEnd({ ok: false, error: e.message });
   });
@@ -148,6 +173,7 @@ function streamDownload({ url, format, quality, res, onEnd }) {
   proc.on('close', (code) => {
     if (code !== 0) {
       logger.warn(`yt-dlp exit ${code}:`, errBuf.slice(0, 500));
+      cleanup();
       if (!res.headersSent) {
         res.status(500).json({ error: 'Téléchargement échoué. Vérifiez le lien.' });
       } else {
@@ -155,8 +181,37 @@ function streamDownload({ url, format, quality, res, onEnd }) {
       }
       if (onEnd) onEnd({ ok: false, error: `exit ${code}` });
     } else {
-      res.end();
-      if (onEnd) onEnd({ ok: true });
+      let outputFile;
+      try {
+        outputFile = findOutputFile();
+      } catch (e) {
+        cleanup();
+        if (!res.headersSent) res.status(500).json({ error: 'Fichier de sortie introuvable.' });
+        if (onEnd) onEnd({ ok: false, error: e.message });
+        return;
+      }
+
+      if (!outputFile) {
+        cleanup();
+        if (!res.headersSent) res.status(500).json({ error: 'Fichier de sortie introuvable.' });
+        if (onEnd) onEnd({ ok: false, error: 'output missing' });
+        return;
+      }
+
+      const stat = fs.statSync(outputFile);
+      res.setHeader('Content-Length', stat.size);
+      const stream = fs.createReadStream(outputFile);
+      stream.on('error', (e) => {
+        logger.error('stream file error:', e.message);
+        cleanup();
+        if (!res.headersSent) res.status(500).json({ error: 'Erreur de lecture du fichier.' });
+        if (onEnd) onEnd({ ok: false, error: e.message });
+      });
+      stream.on('close', () => cleanup());
+      stream.pipe(res);
+      res.on('finish', () => {
+        if (onEnd) onEnd({ ok: true });
+      });
     }
   });
 

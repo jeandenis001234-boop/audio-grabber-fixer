@@ -1,5 +1,5 @@
 /**
- * FBDown Pro — Facebook Video Downloader
+ * Audio Grabber Fixer — Facebook Video Downloader
  * Serveur principal Express : API + site public + panel admin
  */
 require('dotenv').config();
@@ -19,6 +19,7 @@ const adminRoutes = require('./src/routes/admin');
 const logger = require('./src/utils/logger');
 
 const app = express();
+app.set('trust proxy', 1);
 
 // --- Sécurité & middlewares globaux ---
 app.use(
@@ -63,6 +64,37 @@ initDb();
 app.use('/api', apiRoutes);
 app.use('/api/auth', authRoutes);
 
+// --- SEO dynamique : évite les placeholders your-domain.com après installation ---
+app.get('/robots.txt', (req, res) => {
+  res.type('text/plain').send(`User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+Sitemap: ${config.publicUrl.replace(/\/$/, '')}/sitemap.xml
+`);
+});
+
+app.get('/sitemap.xml', (req, res) => {
+  const base = config.publicUrl.replace(/\/$/, '');
+  const urls = [
+    ['/', 'daily', '1.0'],
+    ['/legal/about.html', 'monthly', '0.5'],
+    ['/legal/terms.html', 'monthly', '0.4'],
+    ['/legal/privacy.html', 'monthly', '0.4'],
+    ['/legal/cookies.html', 'monthly', '0.4'],
+    ['/legal/dmca.html', 'monthly', '0.4'],
+    ['/legal/contact.html', 'monthly', '0.4'],
+  ];
+  res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls
+  .map(([pathUrl, changefreq, priority]) => `  <url><loc>${base}${pathUrl}</loc><changefreq>${changefreq}</changefreq><priority>${priority}</priority></url>`)
+  .join('\n')}
+</urlset>
+`);
+});
+
 if (config.adminPanelEnabled) {
   app.use('/api/admin', adminRoutes);
   app.use('/admin', express.static(path.join(__dirname, 'admin')));
@@ -97,7 +129,7 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(config.port, () => {
-  logger.info(`🚀 FBDown Pro démarré sur le port ${config.port}`);
+  logger.info(`🚀 Audio Grabber Fixer démarré sur le port ${config.port}`);
   logger.info(`   Site public   : ${config.webpanelEnabled ? '✓ activé' : '✗ désactivé'}`);
   logger.info(`   Panel admin   : ${config.adminPanelEnabled ? '✓ activé sur /admin' : '✗ désactivé'}`);
   logger.info(`   URL publique  : ${config.publicUrl}`);

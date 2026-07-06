@@ -1,5 +1,7 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
+const fs = require('fs');
+const path = require('path');
 const { isFacebookUrl, getVideoInfo, streamDownload } = require('../utils/ytdlp');
 const { db } = require('../db');
 const config = require('../config');
@@ -83,6 +85,19 @@ router.get('/download', downloadLimiter, (req, res) => {
 });
 
 // GET /api/health
-router.get('/health', (req, res) => res.json({ ok: true, uptime: process.uptime() }));
+router.get('/health', (req, res) => {
+  const publicDir = path.join(__dirname, '..', '..', 'public');
+  res.json({
+    ok: true,
+    uptime: process.uptime(),
+    webpanelEnabled: config.webpanelEnabled,
+    adminPanelEnabled: config.adminPanelEnabled,
+    assets: {
+      css: fs.existsSync(path.join(publicDir, 'css', 'style.css')),
+      js: fs.existsSync(path.join(publicDir, 'js', 'app.js')),
+      home: fs.existsSync(path.join(publicDir, 'index.html')),
+    },
+  });
+});
 
 module.exports = router;

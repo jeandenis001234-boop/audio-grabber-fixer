@@ -1,7 +1,7 @@
 {
-  "name": "fbdown-pro",
+  "name": "audio-grabber-fixer",
   "version": "1.0.0",
-  "description": "Facebook Video Downloader — API + Modern Web Panel with Admin",
+  "description": "Audio Grabber Fixer — Facebook video downloader API, public frontend and admin panel",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

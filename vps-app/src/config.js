@@ -17,7 +17,7 @@ module.exports = {
 
   adsenseClient: process.env.ADSENSE_CLIENT || '',
   gaId: process.env.GA_MEASUREMENT_ID || '',
-  siteName: process.env.SITE_NAME || 'FBDown Pro',
+  siteName: process.env.SITE_NAME || 'Audio Grabber Fixer',
   siteDescription:
     process.env.SITE_DESCRIPTION ||
     'Télécharger les vidéos Facebook en MP4 HD et MP3 gratuitement',
@@ -31,6 +31,9 @@ module.exports = {
   ytdlpBin: process.env.YTDLP_BIN || 'yt-dlp',
   ffmpegBin: process.env.FFMPEG_BIN || 'ffmpeg',
   downloadTimeoutMs: parseInt(process.env.DOWNLOAD_TIMEOUT_MS || '300000', 10),
+  downloadTmpDir:
+    process.env.DOWNLOAD_TMP_DIR ||
+    require('path').join(__dirname, '..', 'data', 'tmp-downloads'),
 
   // Fichier cookies Facebook (format Netscape) — utilisé par yt-dlp
   cookiesFile:
