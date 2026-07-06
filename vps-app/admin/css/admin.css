@@ -178,3 +178,22 @@ tbody tr:hover { background:var(--surface); }
   .main-content { padding:20px; }
   .form-grid { grid-template-columns:1fr; }
 }
+
+/* Tabs (cookies view) */
+.tab-btn {
+  padding: 8px 14px;
+  background: var(--surface-2);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.tab-btn:hover { color: var(--text); border-color: var(--primary); }
+.tab-btn.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+.badge-success { background: rgba(46,204,113,.15); color: #2ecc71; padding: 4px 10px; border-radius: 6px; font-size: 12px; }
