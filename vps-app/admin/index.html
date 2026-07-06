@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Admin — FBDown Pro</title>
+<link rel="icon" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/css/admin.css">
+</head>
+<body>
+<div id="app">
+  <!-- Login screen -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-bg">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+    </div>
+    <div class="login-card">
+      <div class="login-logo">
+        <span class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3v14m0 0l-5-5m5 5l5-5M5 21h14"/></svg>
+        </span>
+      </div>
+      <h1>Panel Administrateur</h1>
+      <p class="login-subtitle">FBDown Pro · Espace sécurisé</p>
+      <form id="loginForm">
+        <label>Nom d'utilisateur</label>
+        <input type="text" id="loginUser" required autocomplete="username">
+        <label>Mot de passe</label>
+        <input type="password" id="loginPass" required autocomplete="current-password">
+        <button type="submit" class="btn-primary" id="loginBtn">
+          <span>Se connecter</span>
+        </button>
+        <div id="loginError" class="login-error" hidden></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard" class="dashboard" hidden>
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <span class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3v14m0 0l-5-5m5 5l5-5M5 21h14"/></svg>
+        </span>
+        <span>Admin</span>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-view="stats">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>
+          Statistiques
+        </button>
+        <button class="nav-item" data-view="downloads">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          Téléchargements
+        </button>
+        <button class="nav-item" data-view="blacklist">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M4.9 4.9l14.2 14.2"/></svg>
+          Blacklist IP
+        </button>
+        <button class="nav-item" data-view="admins">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          Administrateurs
+        </button>
+        <button class="nav-item" data-view="settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          Paramètres
+        </button>
+        <button class="nav-item" data-view="password">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          Mot de passe
+        </button>
+      </nav>
+      <button class="logout-btn" id="logoutBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        Déconnexion
+      </button>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <h2 id="viewTitle">Statistiques</h2>
+          <p class="topbar-sub">Vue d'ensemble de votre plateforme</p>
+        </div>
+        <div class="user-badge">
+          <div class="avatar" id="userAvatar">A</div>
+          <span id="userName">admin</span>
+        </div>
+      </header>
+
+      <div id="viewContainer" class="view-container">
+        <!-- Views injected here -->
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="/admin/js/admin.js"></script>
+</body>
+</html>
