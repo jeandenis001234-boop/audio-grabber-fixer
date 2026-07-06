@@ -157,8 +157,11 @@ ADMIN_EMAIL_LE=""
 if [[ "$INSTALL_NGINX" == "true" ]]; then
   echo "${BOLD}│${RESET}"
   ask_yn "Configurer HTTPS/SSL avec Let's Encrypt ?" y && INSTALL_SSL=true || INSTALL_SSL=false
-  DOMAIN=$(ask "Nom de domaine (ex: download.example.com)" "")
-  [[ -z "$DOMAIN" ]] && fail "Domaine requis pour nginx."
+  DOMAIN=$(ask "Nom de domaine (laisser vide pour utiliser seulement l'IP)" "")
+  if [[ -z "$DOMAIN" ]]; then
+    warn "Aucun domaine fourni : nginx servira le site sur http://$PUBLIC_IP et le SSL sera désactivé."
+    INSTALL_SSL=false
+  fi
   if [[ "$INSTALL_SSL" == "true" ]]; then
     ADMIN_EMAIL_LE=$(ask "Email pour Let's Encrypt (notifications)" "")
   fi
@@ -282,9 +285,14 @@ ADMIN_HASH=$(node -e "console.log(require('bcryptjs').hashSync(process.argv[1], 
 ok "Secrets générés"
 
 step "Écriture du fichier .env"
-PUBLIC_URL="http://$DOMAIN"
-[[ "$INSTALL_SSL" == "true" ]] && PUBLIC_URL="https://$DOMAIN"
-[[ -z "$DOMAIN" ]] && PUBLIC_URL="http://$PUBLIC_IP:$APP_PORT"
+if [[ -n "$DOMAIN" ]]; then
+  PUBLIC_URL="http://$DOMAIN"
+  [[ "$INSTALL_SSL" == "true" ]] && PUBLIC_URL="https://$DOMAIN"
+elif [[ "$INSTALL_NGINX" == "true" ]]; then
+  PUBLIC_URL="http://$PUBLIC_IP"
+else
+  PUBLIC_URL="http://$PUBLIC_IP:$APP_PORT"
+fi
 
 cat > "$INSTALL_DIR/.env" <<ENV
 PORT=$APP_PORT
@@ -435,12 +443,13 @@ close
 if [[ "$INSTALL_NGINX" == "true" ]]; then
   section "Configuration nginx"
   step "Création du vhost pour $DOMAIN"
+  NGINX_SERVER_NAME="${DOMAIN:-_}"
   rm -f /etc/nginx/sites-enabled/fbdown /etc/nginx/sites-available/fbdown
   cat > /etc/nginx/sites-available/$SERVICE_NAME <<NGINX
 server {
     listen 80;
     listen [::]:80;
-    server_name $DOMAIN;
+    server_name $NGINX_SERVER_NAME;
 
     client_max_body_size 100M;
 
