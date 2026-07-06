@@ -476,10 +476,10 @@ NGINX
     else
       CERTBOT_EMAIL_ARG="--register-unsafely-without-email"
     fi
-    if certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos $CERTBOT_EMAIL_ARG --redirect 2>&1 | tee /tmp/fbdown-certbot.log; then
+    if certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos $CERTBOT_EMAIL_ARG --redirect 2>&1 | tee /tmp/audio-grabber-fixer-certbot.log; then
       ok "SSL activé — https://$DOMAIN"
     else
-      warn "Échec de certbot. Vérifiez /tmp/fbdown-certbot.log"
+      warn "Échec de certbot. Vérifiez /tmp/audio-grabber-fixer-certbot.log"
       warn "Le site reste accessible en HTTP."
     fi
     close

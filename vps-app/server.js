@@ -1,5 +1,5 @@
 /**
- * FBDown Pro — Facebook Video Downloader
+ * Audio Grabber Fixer — Facebook Video Downloader
  * Serveur principal Express : API + site public + panel admin
  */
 require('dotenv').config();
@@ -129,7 +129,7 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(config.port, () => {
-  logger.info(`🚀 FBDown Pro démarré sur le port ${config.port}`);
+  logger.info(`🚀 Audio Grabber Fixer démarré sur le port ${config.port}`);
   logger.info(`   Site public   : ${config.webpanelEnabled ? '✓ activé' : '✗ désactivé'}`);
   logger.info(`   Panel admin   : ${config.adminPanelEnabled ? '✓ activé sur /admin' : '✗ désactivé'}`);
   logger.info(`   URL publique  : ${config.publicUrl}`);

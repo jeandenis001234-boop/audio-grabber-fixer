@@ -17,7 +17,7 @@ module.exports = {
 
   adsenseClient: process.env.ADSENSE_CLIENT || '',
   gaId: process.env.GA_MEASUREMENT_ID || '',
-  siteName: process.env.SITE_NAME || 'FBDown Pro',
+  siteName: process.env.SITE_NAME || 'Audio Grabber Fixer',
   siteDescription:
     process.env.SITE_DESCRIPTION ||
     'Télécharger les vidéos Facebook en MP4 HD et MP3 gratuitement',
