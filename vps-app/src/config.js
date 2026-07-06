@@ -31,4 +31,9 @@ module.exports = {
   ytdlpBin: process.env.YTDLP_BIN || 'yt-dlp',
   ffmpegBin: process.env.FFMPEG_BIN || 'ffmpeg',
   downloadTimeoutMs: parseInt(process.env.DOWNLOAD_TIMEOUT_MS || '300000', 10),
+
+  // Fichier cookies Facebook (format Netscape) — utilisé par yt-dlp
+  cookiesFile:
+    process.env.FB_COOKIES_FILE ||
+    require('path').join(__dirname, '..', 'data', 'fb-cookies.txt'),
 };

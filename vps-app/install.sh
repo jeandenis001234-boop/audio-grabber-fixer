@@ -299,10 +299,76 @@ DOWNLOAD_RATE_LIMIT_MAX=20
 YTDLP_BIN=/usr/local/bin/yt-dlp
 FFMPEG_BIN=/usr/bin/ffmpeg
 DOWNLOAD_TIMEOUT_MS=300000
+
+FB_COOKIES_FILE=$INSTALL_DIR/data/fb-cookies.txt
 ENV
 chmod 600 "$INSTALL_DIR/.env"
 ok "Configuration écrite"
 close
+
+# --- Cookies Facebook (optionnel) ---
+section "Cookies Facebook (optionnel mais recommandé)"
+echo "${BOLD}│${RESET}   ${DIM}Sans cookies, seules les vidéos 100% publiques fonctionnent.${RESET}"
+echo "${BOLD}│${RESET}   ${DIM}Avec cookies : vidéos privées, groupes, réservées connectés, 18+.${RESET}"
+echo "${BOLD}│${RESET}"
+echo "${BOLD}│${RESET}   ${BOLD}Formats acceptés :${RESET}"
+echo "${BOLD}│${RESET}     ${DOT} Netscape cookies.txt  ${DIM}(extension \"Get cookies.txt LOCALLY\")${RESET}"
+echo "${BOLD}│${RESET}     ${DOT} JSON                  ${DIM}(EditThisCookie, Cookie-Editor)${RESET}"
+echo "${BOLD}│${RESET}     ${DOT} Header string         ${DIM}(c_user=xxx; xs=yyy; datr=zzz)${RESET}"
+echo "${BOLD}│${RESET}     ${DOT} Import via panel admin plus tard"
+echo "${BOLD}│${RESET}"
+
+mkdir -p "$INSTALL_DIR/data"
+
+if ask_yn "Fournir un fichier cookies maintenant ?" n; then
+  echo "${BOLD}│${RESET}"
+  echo "${BOLD}│${RESET}   ${BOLD}Options :${RESET}"
+  echo "${BOLD}│${RESET}     ${CYAN}1${RESET}) Chemin vers un fichier existant sur le VPS"
+  echo "${BOLD}│${RESET}     ${CYAN}2${RESET}) Coller le contenu ici (Ctrl+D pour terminer)"
+  echo "${BOLD}│${RESET}     ${CYAN}3${RESET}) Ignorer (configurer via panel plus tard)"
+  COOKIE_OPT=$(ask "Choix" "3")
+  COOKIE_TMP=$(mktemp)
+  case "$COOKIE_OPT" in
+    1)
+      COOKIE_PATH=$(ask "Chemin du fichier" "")
+      if [[ -f "$COOKIE_PATH" ]]; then
+        cp "$COOKIE_PATH" "$COOKIE_TMP"
+        ok "Fichier chargé"
+      else
+        warn "Fichier introuvable — ignoré."
+        rm -f "$COOKIE_TMP"; COOKIE_TMP=""
+      fi
+      ;;
+    2)
+      echo "${BOLD}│${RESET}   ${DIM}Collez le contenu, puis Ctrl+D :${RESET}"
+      cat > "$COOKIE_TMP"
+      [[ -s "$COOKIE_TMP" ]] && ok "Contenu reçu" || { rm -f "$COOKIE_TMP"; COOKIE_TMP=""; warn "Vide — ignoré."; }
+      ;;
+    *)
+      rm -f "$COOKIE_TMP"; COOKIE_TMP=""
+      info "Ignoré — configurez via le panel admin."
+      ;;
+  esac
+
+  if [[ -n "$COOKIE_TMP" && -s "$COOKIE_TMP" ]]; then
+    step "Import et conversion multi-format"
+    (cd "$INSTALL_DIR" && node -e "
+      const c = require('./src/utils/cookies');
+      const fs = require('fs');
+      try {
+        const info = c.saveCookies(fs.readFileSync('$COOKIE_TMP','utf8'));
+        console.log('OK: ' + info.imported + ' cookies importés');
+      } catch(e) { console.error('ERR: ' + e.message); process.exit(1); }
+    ") && ok "Cookies installés" || warn "Import échoué — vous pourrez réessayer via le panel."
+    rm -f "$COOKIE_TMP"
+    chmod 600 "$INSTALL_DIR/data/fb-cookies.txt" 2>/dev/null || true
+  fi
+else
+  info "Vous pourrez importer vos cookies via /admin → Cookies Facebook"
+fi
+close
+
+
 
 # --- Service systemd ---
 section "Configuration du service systemd"

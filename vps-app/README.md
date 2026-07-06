@@ -166,3 +166,25 @@ MIT — utilisation libre pour projets personnels et commerciaux.
 - Logs installation : `/tmp/fbdown-install.log`
 - Redémarrer : `systemctl restart fbdown`
 - Éditer config : `nano /opt/fbdown-pro/.env` puis `systemctl restart fbdown`
+
+## 🍪 Cookies Facebook (vidéos privées)
+
+Par défaut, seules les vidéos **100% publiques** sont téléchargeables. Pour les vidéos privées, groupes fermés, réservées connectés ou 18+, il faut fournir des cookies Facebook.
+
+### Formats supportés (auto-détectés)
+
+| Format | Source | Exemple |
+|---|---|---|
+| **Netscape** `cookies.txt` | Extension *Get cookies.txt LOCALLY* | `# Netscape HTTP Cookie File`... |
+| **JSON** | *EditThisCookie*, *Cookie-Editor* | `[{"domain":".facebook.com","name":"c_user",...}]` |
+| **Header string** | DevTools → Network → Cookie | `c_user=123; xs=abc; datr=xyz` |
+| **cURL** | `Copy as cURL` | `-H "Cookie: c_user=..."` |
+
+### Comment importer
+
+- **Pendant l'install** : l'installateur demande si vous voulez fournir un fichier (chemin ou copier-coller).
+- **Après l'install** : panel admin → **Cookies Facebook** → coller / uploader → **Importer** → **Tester**.
+
+Le fichier est stocké en `chmod 600` dans `data/fb-cookies.txt` au format Netscape (converti automatiquement), puis passé à `yt-dlp` via `--cookies`.
+
+> ⚠️ Utilisez un **compte Facebook dédié**, jamais votre compte principal — les cookies équivalent à un accès complet au compte.

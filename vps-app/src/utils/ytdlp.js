@@ -1,6 +1,7 @@
 const { spawn } = require('child_process');
 const config = require('../config');
 const logger = require('./logger');
+const { ytdlpCookieArgs } = require('./cookies');
 
 const FB_URL_REGEX = /^https?:\/\/(www\.|web\.|m\.|mbasic\.|business\.)?(facebook|fb)\.(com|watch)\/[^\s]+$/i;
 
@@ -19,6 +20,7 @@ function getVideoInfo(url) {
       '--no-playlist',
       '--dump-single-json',
       '--no-check-certificates',
+      ...ytdlpCookieArgs(),
       url,
     ];
     const proc = spawn(config.ytdlpBin, args, { timeout: 30000 });
@@ -100,10 +102,12 @@ function streamDownload({ url, format, quality, res, onEnd }) {
       '--no-warnings',
       '--no-playlist',
       '--no-check-certificates',
+      ...ytdlpCookieArgs(),
       '-f', 'bestaudio/best',
       '-x',
       '--audio-format', 'mp3',
       '--audio-quality', quality === '128' ? '5' : '0', // 0 = best (~192-320k)
+      '--ffmpeg-location', config.ffmpegBin,
       '-o', '-',
       url,
     ];
@@ -115,6 +119,7 @@ function streamDownload({ url, format, quality, res, onEnd }) {
       '--no-warnings',
       '--no-playlist',
       '--no-check-certificates',
+      ...ytdlpCookieArgs(),
       '-f', selector,
       '--merge-output-format', 'mp4',
       '--ffmpeg-location', config.ffmpegBin,
