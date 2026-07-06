@@ -89,6 +89,7 @@
     downloads: 'Téléchargements',
     blacklist: 'Blacklist IP',
     admins: 'Administrateurs',
+    cookies: 'Cookies Facebook',
     settings: 'Paramètres',
     password: 'Changer le mot de passe',
   };
