@@ -150,6 +150,7 @@ INSTALL_SSL=true
 ask_yn "Activer le site web public (interface utilisateur) ?" y && INSTALL_WEBPANEL=true || INSTALL_WEBPANEL=false
 ask_yn "Activer le panel administrateur (/admin) ?" y && INSTALL_ADMIN=true || INSTALL_ADMIN=false
 ask_yn "Configurer nginx en reverse proxy ?" y && INSTALL_NGINX=true || INSTALL_NGINX=false
+[[ "$INSTALL_NGINX" != "true" ]] && INSTALL_SSL=false
 
 DOMAIN=""
 ADMIN_EMAIL_LE=""
@@ -166,7 +167,9 @@ fi
 echo "${BOLD}│${RESET}"
 echo "${BOLD}│${RESET}   ${BOLD}Compte administrateur initial :${RESET}"
 ADMIN_USER=$(ask "Nom d'utilisateur admin" "admin")
-ADMIN_EMAIL=$(ask "Email admin" "admin@$DOMAIN")
+DEFAULT_ADMIN_EMAIL="admin@example.com"
+[[ -n "$DOMAIN" ]] && DEFAULT_ADMIN_EMAIL="admin@$DOMAIN"
+ADMIN_EMAIL=$(ask "Email admin" "$DEFAULT_ADMIN_EMAIL")
 
 while true; do
   ADMIN_PASS=$(ask_secret "Mot de passe admin (min 8 caractères)")
@@ -308,6 +311,7 @@ DOWNLOAD_RATE_LIMIT_MAX=20
 YTDLP_BIN=/usr/local/bin/yt-dlp
 FFMPEG_BIN=/usr/bin/ffmpeg
 DOWNLOAD_TIMEOUT_MS=300000
+DOWNLOAD_TMP_DIR=$INSTALL_DIR/data/tmp-downloads
 
 FB_COOKIES_FILE=$INSTALL_DIR/data/fb-cookies.txt
 ENV
