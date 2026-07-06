@@ -299,6 +299,8 @@ DOWNLOAD_RATE_LIMIT_MAX=20
 YTDLP_BIN=/usr/local/bin/yt-dlp
 FFMPEG_BIN=/usr/bin/ffmpeg
 DOWNLOAD_TIMEOUT_MS=300000
+
+FB_COOKIES_FILE=$INSTALL_DIR/data/fb-cookies.txt
 ENV
 chmod 600 "$INSTALL_DIR/.env"
 ok "Configuration écrite"
