@@ -1,6 +1,7 @@
 const { spawn } = require('child_process');
 const config = require('../config');
 const logger = require('./logger');
+const { ytdlpCookieArgs } = require('./cookies');
 
 const FB_URL_REGEX = /^https?:\/\/(www\.|web\.|m\.|mbasic\.|business\.)?(facebook|fb)\.(com|watch)\/[^\s]+$/i;
 
