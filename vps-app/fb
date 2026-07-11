@@ -1,0 +1,349 @@
+#!/usr/bin/env bash
+# ╔══════════════════════════════════════════════════════════╗
+# ║              DOWFBAPI — Menu interactif                  ║
+# ║       Tapez "fb" dans le terminal pour accéder           ║
+# ╚══════════════════════════════════════════════════════════╝
+#
+# Installation (une seule fois, en root ou sudo) :
+#   sudo ln -sf "$(realpath "$0")" /usr/local/bin/fb
+#   sudo chmod +x /usr/local/bin/fb
+
+set -euo pipefail
+
+# ── Résolution du répertoire projet ──────────────────────────────────────────
+SCRIPT_REAL="$(readlink -f "${BASH_SOURCE[0]}")"
+PROJECT_DIR="$(dirname "$SCRIPT_REAL")"
+CONFIG_FILE="$PROJECT_DIR/bot-config.json"
+LOG_DIR="$PROJECT_DIR/logs"
+
+# Couleurs ANSI
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+BLUE='\033[0;34m'
+MAGENTA='\033[0;35m'
+BOLD='\033[1m'
+RESET='\033[0m'
+
+# ── Utilitaires ───────────────────────────────────────────────────────────────
+print_banner() {
+  clear
+  echo -e "${CYAN}${BOLD}"
+  echo "  ╔══════════════════════════════════════════════════╗"
+  echo "  ║         DOWFBAPI — Facebook Downloader          ║"
+  echo "  ║              Menu de contrôle v1.0              ║"
+  echo "  ╚══════════════════════════════════════════════════╝"
+  echo -e "${RESET}"
+}
+
+ok()   { echo -e "  ${GREEN}✔${RESET} $*"; }
+err()  { echo -e "  ${RED}✘${RESET} $*"; }
+info() { echo -e "  ${CYAN}ℹ${RESET} $*"; }
+warn() { echo -e "  ${YELLOW}⚠${RESET} $*"; }
+sep()  { echo -e "  ${BLUE}──────────────────────────────────────────${RESET}"; }
+
+check_pm2() {
+  if ! command -v pm2 &>/dev/null; then
+    warn "PM2 non trouvé. Installation…"
+    npm install -g pm2 2>&1 | tail -3
+    ok "PM2 installé."
+  fi
+}
+
+api_status() {
+  if pm2 list 2>/dev/null | grep -q "dowfbapi.*online"; then
+    echo -e "${GREEN}EN LIGNE${RESET}"
+  else
+    echo -e "${RED}HORS LIGNE${RESET}"
+  fi
+}
+
+bot_status() {
+  if pm2 list 2>/dev/null | grep -q "dowfbapi-bot.*online"; then
+    echo -e "${GREEN}EN LIGNE${RESET}"
+  else
+    echo -e "${RED}HORS LIGNE${RESET}"
+  fi
+}
+
+# ── Actions API ───────────────────────────────────────────────────────────────
+start_api() {
+  print_banner
+  echo -e "  ${BOLD}▶ Démarrage de l'API…${RESET}\n"
+  check_pm2
+  cd "$PROJECT_DIR"
+  if pm2 list 2>/dev/null | grep -q "dowfbapi"; then
+    pm2 restart dowfbapi
+    ok "API redémarrée."
+  else
+    pm2 start ecosystem.config.js --only dowfbapi
+    pm2 save
+    ok "API démarrée et enregistrée dans PM2."
+  fi
+  echo
+  press_any_key
+}
+
+stop_api() {
+  print_banner
+  echo -e "  ${BOLD}⏹ Arrêt de l'API…${RESET}\n"
+  pm2 stop dowfbapi 2>/dev/null && ok "API arrêtée." || err "API non trouvée dans PM2."
+  echo
+  press_any_key
+}
+
+status_api() {
+  print_banner
+  echo -e "  ${BOLD}📊 Statut de l'API${RESET}\n"
+  pm2 show dowfbapi 2>/dev/null || err "Processus API introuvable."
+  echo
+  press_any_key
+}
+
+logs_api() {
+  print_banner
+  echo -e "  ${BOLD}📋 Logs API (Ctrl+C pour quitter)${RESET}\n"
+  pm2 logs dowfbapi --lines 50
+}
+
+# ── Actions Bot Telegram ──────────────────────────────────────────────────────
+setup_bot() {
+  print_banner
+  echo -e "  ${BOLD}${MAGENTA}🤖 Configuration du Bot Telegram${RESET}\n"
+  sep
+
+  # Token
+  echo -e "\n  ${BOLD}Étape 1/2 — Token du Bot Telegram${RESET}"
+  info "Obtenez votre token sur @BotFather → /newbot"
+  echo -n "  Entrez le token : "
+  read -r BOT_TOKEN
+  if [[ -z "$BOT_TOKEN" ]]; then
+    err "Token vide. Annulé."
+    press_any_key; return
+  fi
+
+  # Admin ID
+  echo -e "\n  ${BOLD}Étape 2/2 — Votre ID Telegram (admin)${RESET}"
+  info "Pour connaître votre ID, envoyez /start à @userinfobot sur Telegram."
+  echo -n "  Entrez votre ID Telegram : "
+  read -r ADMIN_ID
+  if [[ -z "$ADMIN_ID" ]] || ! [[ "$ADMIN_ID" =~ ^[0-9]+$ ]]; then
+    err "ID invalide. Annulé."
+    press_any_key; return
+  fi
+
+  # Write config
+  cat > "$CONFIG_FILE" <<JSON
+{
+  "token": "$BOT_TOKEN",
+  "adminId": "$ADMIN_ID",
+  "apiUrl": "http://localhost:3000"
+}
+JSON
+  ok "Configuration sauvegardée dans bot-config.json"
+
+  # Install npm dependencies
+  echo -e "\n  ${BOLD}Installation des dépendances Node.js…${RESET}"
+  cd "$PROJECT_DIR"
+  npm install --silent
+  ok "Dépendances installées."
+
+  # Install PM2 globally if needed
+  check_pm2
+
+  # Create log directory
+  mkdir -p "$LOG_DIR"
+
+  # Register bot with PM2
+  echo -e "\n  ${BOLD}Enregistrement du bot dans PM2…${RESET}"
+  if pm2 list 2>/dev/null | grep -q "dowfbapi-bot"; then
+    pm2 restart dowfbapi-bot
+    ok "Bot Telegram redémarré."
+  else
+    pm2 start "$PROJECT_DIR/bot/bot.js" \
+      --name "dowfbapi-bot" \
+      --log "$LOG_DIR/bot-out.log" \
+      --error "$LOG_DIR/bot-error.log" \
+      --restart-delay 5000 \
+      --max-restarts 10 \
+      --min-uptime "10s"
+    pm2 save
+    ok "Bot Telegram démarré et enregistré dans PM2."
+  fi
+
+  # Enable PM2 startup so the bot survives reboots
+  echo -e "\n  ${BOLD}Activation du démarrage automatique au boot…${RESET}"
+  STARTUP_CMD=$(pm2 startup 2>/dev/null | grep "sudo env" | head -1 || true)
+  # Validate that the extracted command looks like a PM2 startup command before running it
+  if [[ -n "$STARTUP_CMD" ]] && [[ "$STARTUP_CMD" =~ ^sudo[[:space:]]env[[:space:]]PATH= ]]; then
+    bash -c "$STARTUP_CMD" 2>/dev/null && ok "Démarrage automatique activé." || warn "Exécutez manuellement: $STARTUP_CMD"
+  else
+    pm2 save
+    ok "PM2 save exécuté. Démarrage automatique déjà configuré ou à configurer manuellement."
+  fi
+
+  echo
+  ok "✅ Bot Telegram opérationnel 24h/24 même terminal fermé!"
+  info "Testez le bot en envoyant /start dans Telegram."
+  echo
+  press_any_key
+}
+
+start_bot() {
+  print_banner
+  echo -e "  ${BOLD}▶ Démarrage du Bot Telegram…${RESET}\n"
+  if ! [[ -f "$CONFIG_FILE" ]]; then
+    err "bot-config.json introuvable. Utilisez l'option 5 pour configurer."
+    press_any_key; return
+  fi
+  check_pm2
+  if pm2 list 2>/dev/null | grep -q "dowfbapi-bot"; then
+    pm2 restart dowfbapi-bot && ok "Bot redémarré."
+  else
+    mkdir -p "$LOG_DIR"
+    pm2 start "$PROJECT_DIR/bot/bot.js" \
+      --name "dowfbapi-bot" \
+      --log "$LOG_DIR/bot-out.log" \
+      --error "$LOG_DIR/bot-error.log"
+    pm2 save
+    ok "Bot démarré."
+  fi
+  echo
+  press_any_key
+}
+
+stop_bot() {
+  print_banner
+  echo -e "  ${BOLD}⏹ Arrêt du Bot Telegram…${RESET}\n"
+  pm2 stop dowfbapi-bot 2>/dev/null && ok "Bot arrêté." || err "Bot non trouvé dans PM2."
+  echo
+  press_any_key
+}
+
+logs_bot() {
+  print_banner
+  echo -e "  ${BOLD}📋 Logs Bot Telegram (Ctrl+C pour quitter)${RESET}\n"
+  pm2 logs dowfbapi-bot --lines 50
+}
+
+# ── Maintenance ───────────────────────────────────────────────────────────────
+update_ytdlp() {
+  print_banner
+  echo -e "  ${BOLD}🔄 Mise à jour de yt-dlp…${RESET}\n"
+  if command -v yt-dlp &>/dev/null; then
+    yt-dlp -U
+    ok "yt-dlp mis à jour."
+  elif pip3 install -U yt-dlp 2>/dev/null; then
+    ok "yt-dlp mis à jour via pip3."
+  elif pip install -U yt-dlp 2>/dev/null; then
+    ok "yt-dlp mis à jour via pip."
+  else
+    # Fallback: download binary
+    warn "Téléchargement du binaire yt-dlp…"
+    curl -sL "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp" \
+      -o /usr/local/bin/yt-dlp && chmod +x /usr/local/bin/yt-dlp
+    ok "yt-dlp binaire installé dans /usr/local/bin/"
+  fi
+  echo
+  press_any_key
+}
+
+test_api() {
+  print_banner
+  echo -e "  ${BOLD}🧪 Test de l'API locale…${RESET}\n"
+  if ! command -v curl &>/dev/null; then
+    err "curl non disponible."
+    press_any_key; return
+  fi
+  RESULT=$(curl -sf http://localhost:3000/api/analyze \
+    -X POST \
+    -H "Content-Type: application/json" \
+    -d '{"url":"https://www.facebook.com/share/r/1Awr2QhKNR/"}' 2>&1) || true
+  if echo "$RESULT" | grep -q '"success":true'; then
+    ok "API opérationnelle ✅"
+    echo -e "\n  ${CYAN}Réponse (extrait):${RESET}"
+    if command -v python3 &>/dev/null && echo "$RESULT" | python3 -m json.tool &>/dev/null; then
+      echo "$RESULT" | python3 -m json.tool | head -20
+    else
+      echo "$RESULT" | head -5
+      warn "Installez python3 pour un affichage JSON formaté."
+    fi
+  else
+    err "L'API a retourné une erreur ou est inaccessible."
+    echo "  Réponse: $RESULT"
+  fi
+  echo
+  press_any_key
+}
+
+install_fb_command() {
+  print_banner
+  echo -e "  ${BOLD}⚙️  Installation de la commande 'fb' dans le système…${RESET}\n"
+  TARGET="/usr/local/bin/fb"
+  SCRIPT_REAL="$(readlink -f "${BASH_SOURCE[0]}")"
+  if sudo ln -sf "$SCRIPT_REAL" "$TARGET" 2>/dev/null; then
+    sudo chmod +x "$TARGET"
+    ok "Commande 'fb' installée dans /usr/local/bin/"
+    info "Vous pouvez maintenant taper 'fb' depuis n'importe où."
+  else
+    err "Impossible de créer le lien symbolique. Essayez manuellement:"
+    echo -e "    ${YELLOW}sudo ln -sf \"$SCRIPT_REAL\" $TARGET${RESET}"
+  fi
+  echo
+  press_any_key
+}
+
+# ── Press any key ─────────────────────────────────────────────────────────────
+press_any_key() {
+  echo -e "  ${YELLOW}Appuyez sur Entrée pour revenir au menu…${RESET}"
+  read -r
+}
+
+# ── Menu principal ────────────────────────────────────────────────────────────
+main_menu() {
+  while true; do
+    print_banner
+
+    echo -e "  ${BOLD}${BLUE}[ Serveur API ]${RESET}"
+    echo -e "    ${BOLD}1)${RESET} ▶  Démarrer l'API           $(api_status)"
+    echo -e "    ${BOLD}2)${RESET} ⏹  Arrêter l'API"
+    echo -e "    ${BOLD}3)${RESET} 📊 Statut de l'API"
+    echo -e "    ${BOLD}4)${RESET} 📋 Logs de l'API"
+    echo
+    echo -e "  ${BOLD}${MAGENTA}[ Bot Telegram ]${RESET}"
+    echo -e "    ${BOLD}5)${RESET} 🔧 Configurer & installer le Bot  (token + admin ID)"
+    echo -e "    ${BOLD}6)${RESET} ▶  Démarrer le Bot         $(bot_status)"
+    echo -e "    ${BOLD}7)${RESET} ⏹  Arrêter le Bot"
+    echo -e "    ${BOLD}8)${RESET} 📋 Logs du Bot"
+    echo
+    echo -e "  ${BOLD}${YELLOW}[ Maintenance ]${RESET}"
+    echo -e "    ${BOLD}9)${RESET} 🔄 Mettre à jour yt-dlp"
+    echo -e "   ${BOLD}10)${RESET} 🧪 Tester l'API locale"
+    echo -e "   ${BOLD}11)${RESET} ⚙️  Installer la commande 'fb' dans /usr/local/bin"
+    echo
+    echo -e "    ${BOLD}0)${RESET} 🚪 Quitter"
+    echo
+    sep
+    echo -n "  Votre choix : "
+    read -r choice
+
+    case "$choice" in
+      1)  start_api ;;
+      2)  stop_api ;;
+      3)  status_api ;;
+      4)  logs_api ;;
+      5)  setup_bot ;;
+      6)  start_bot ;;
+      7)  stop_bot ;;
+      8)  logs_bot ;;
+      9)  update_ytdlp ;;
+      10) test_api ;;
+      11) install_fb_command ;;
+      0)  echo -e "\n  ${GREEN}À bientôt!${RESET}\n"; exit 0 ;;
+      *)  warn "Choix invalide. Entrez un nombre entre 0 et 11." ; sleep 1 ;;
+    esac
+  done
+}
+
+main_menu
