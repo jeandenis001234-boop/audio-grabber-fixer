@@ -511,6 +511,17 @@ if command -v ufw >/dev/null 2>&1; then
   close
 fi
 
+# --- Menu fb ---
+section "Installation du menu interactif 'fb'"
+if [[ -f "$INSTALL_DIR/fb" ]]; then
+  ln -sf "$INSTALL_DIR/fb" /usr/local/bin/fb
+  chmod +x /usr/local/bin/fb
+  ok "Commande 'fb' disponible (tapez ${CYAN}fb${RESET} dans le terminal)"
+else
+  warn "Fichier fb introuvable — commande non installée."
+fi
+close
+
 # ================================================================
 #  Fin
 # ================================================================
