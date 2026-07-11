@@ -267,10 +267,11 @@ step "Création du dossier $INSTALL_DIR"
 mkdir -p "$INSTALL_DIR"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 step "Copie des fichiers"
-cp -r "$SCRIPT_DIR"/{server.js,src,public,admin,package.json,.env.example} "$INSTALL_DIR/" 2>/dev/null || {
+cp -r "$SCRIPT_DIR"/{server.js,src,public,admin,bot,fb,ecosystem.config.js,package.json,.env.example} "$INSTALL_DIR/" 2>/dev/null || {
   # Fallback si lancé depuis le dossier lui-même
   rsync -a --exclude='node_modules' --exclude='data' --exclude='.env' "$SCRIPT_DIR/" "$INSTALL_DIR/"
 }
+chmod +x "$INSTALL_DIR/fb" 2>/dev/null || true
 
 cd "$INSTALL_DIR"
 
