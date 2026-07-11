@@ -1,0 +1,42 @@
+module.exports = {
+  apps: [
+    {
+      name: 'audio-grabber-fixer',
+      script: 'server.js',
+      instances: 1,
+      exec_mode: 'fork',
+      watch: false,
+      max_memory_restart: '400M',
+      env: {
+        NODE_ENV: 'production',
+      },
+      out_file: `${__dirname}/logs/out.log`,
+      error_file: `${__dirname}/logs/error.log`,
+      merge_logs: true,
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+      restart_delay: 5000,
+      max_restarts: 10,
+      min_uptime: '10s',
+      kill_timeout: 10000,
+      listen_timeout: 15000,
+    },
+    // Bot Telegram — démarré via `fb` → option 5 après création de bot-config.json
+    {
+      name: 'audio-grabber-bot',
+      script: './bot/bot.js',
+      instances: 1,
+      exec_mode: 'fork',
+      watch: false,
+      max_memory_restart: '200M',
+      autorestart: true,
+      env: { NODE_ENV: 'production' },
+      out_file: `${__dirname}/logs/bot-out.log`,
+      error_file: `${__dirname}/logs/bot-error.log`,
+      merge_logs: true,
+      restart_delay: 5000,
+      max_restarts: 10,
+      min_uptime: '10s',
+      kill_timeout: 5000,
+    },
+  ],
+};
