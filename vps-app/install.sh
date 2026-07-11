@@ -267,10 +267,11 @@ step "Création du dossier $INSTALL_DIR"
 mkdir -p "$INSTALL_DIR"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 step "Copie des fichiers"
-cp -r "$SCRIPT_DIR"/{server.js,src,public,admin,package.json,.env.example} "$INSTALL_DIR/" 2>/dev/null || {
+cp -r "$SCRIPT_DIR"/{server.js,src,public,admin,bot,fb,ecosystem.config.js,package.json,.env.example} "$INSTALL_DIR/" 2>/dev/null || {
   # Fallback si lancé depuis le dossier lui-même
   rsync -a --exclude='node_modules' --exclude='data' --exclude='.env' "$SCRIPT_DIR/" "$INSTALL_DIR/"
 }
+chmod +x "$INSTALL_DIR/fb" 2>/dev/null || true
 
 cd "$INSTALL_DIR"
 
@@ -509,6 +510,17 @@ if command -v ufw >/dev/null 2>&1; then
   fi
   close
 fi
+
+# --- Menu fb ---
+section "Installation du menu interactif 'fb'"
+if [[ -f "$INSTALL_DIR/fb" ]]; then
+  ln -sf "$INSTALL_DIR/fb" /usr/local/bin/fb
+  chmod +x /usr/local/bin/fb
+  ok "Commande 'fb' disponible (tapez ${CYAN}fb${RESET} dans le terminal)"
+else
+  warn "Fichier fb introuvable — commande non installée."
+fi
+close
 
 # ================================================================
 #  Fin

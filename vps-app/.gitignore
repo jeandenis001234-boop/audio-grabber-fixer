@@ -1,5 +1,22 @@
 node_modules/
 data/
+logs/
 .env
 *.log
 .DS_Store
+Thumbs.db
+downloads/
+tmp/
+.nyc_output/
+coverage/
+
+# Bot Telegram runtime (ne jamais committer)
+bot-config.json
+data/users.json
+data/stats.json
+data/fbdown.db*
+data/fb-cookies.txt
+data/tmp-downloads/
+
+# PM2
+.pm2/
