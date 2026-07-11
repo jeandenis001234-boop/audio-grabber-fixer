@@ -48,6 +48,14 @@
 - Firewall UFW configuré.
 - Logs propres pour diagnostiquer rapidement.
 
+### 🤖 Bot Telegram (optionnel — depuis le repo original)
+
+- Fichier `bot/bot.js` + menu interactif `fb` reproduits à l'identique.
+- Commandes utilisateur : `/start`, `/help`, envoi d'un lien Facebook → analyse.
+- Commandes admin : `/stats`, `/broadcast`, `/ban`, `/unban`, `/logs`, `/restart`.
+- Le bot appelle désormais `/api/analyze` qui renvoie des liens vers `/api/download` **avec audio fusionné** — plus jamais de vidéo muette.
+- Activation via `sudo ln -sf $(pwd)/fb /usr/local/bin/fb && fb` → option 5 (token BotFather + votre ID Telegram).
+
 ---
 
 ## 🚀 Installation rapide sur VPS Ubuntu/Debian
