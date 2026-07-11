@@ -52,7 +52,7 @@ check_pm2() {
 }
 
 api_status() {
-  if pm2 list 2>/dev/null | grep -q "dowfbapi.*online"; then
+  if pm2 list 2>/dev/null | grep -q "audio-grabber-fixer.*online"; then
     echo -e "${GREEN}EN LIGNE${RESET}"
   else
     echo -e "${RED}HORS LIGNE${RESET}"
@@ -60,7 +60,7 @@ api_status() {
 }
 
 bot_status() {
-  if pm2 list 2>/dev/null | grep -q "dowfbapi-bot.*online"; then
+  if pm2 list 2>/dev/null | grep -q "audio-grabber-bot.*online"; then
     echo -e "${GREEN}EN LIGNE${RESET}"
   else
     echo -e "${RED}HORS LIGNE${RESET}"
@@ -73,11 +73,11 @@ start_api() {
   echo -e "  ${BOLD}▶ Démarrage de l'API…${RESET}\n"
   check_pm2
   cd "$PROJECT_DIR"
-  if pm2 list 2>/dev/null | grep -q "dowfbapi"; then
-    pm2 restart dowfbapi
+  if pm2 list 2>/dev/null | grep -q "audio-grabber-fixer"; then
+    pm2 restart audio-grabber-fixer
     ok "API redémarrée."
   else
-    pm2 start ecosystem.config.js --only dowfbapi
+    pm2 start ecosystem.config.js --only audio-grabber-fixer
     pm2 save
     ok "API démarrée et enregistrée dans PM2."
   fi
@@ -88,7 +88,7 @@ start_api() {
 stop_api() {
   print_banner
   echo -e "  ${BOLD}⏹ Arrêt de l'API…${RESET}\n"
-  pm2 stop dowfbapi 2>/dev/null && ok "API arrêtée." || err "API non trouvée dans PM2."
+  pm2 stop audio-grabber-fixer 2>/dev/null && ok "API arrêtée." || err "API non trouvée dans PM2."
   echo
   press_any_key
 }
@@ -96,7 +96,7 @@ stop_api() {
 status_api() {
   print_banner
   echo -e "  ${BOLD}📊 Statut de l'API${RESET}\n"
-  pm2 show dowfbapi 2>/dev/null || err "Processus API introuvable."
+  pm2 show audio-grabber-fixer 2>/dev/null || err "Processus API introuvable."
   echo
   press_any_key
 }
@@ -104,7 +104,7 @@ status_api() {
 logs_api() {
   print_banner
   echo -e "  ${BOLD}📋 Logs API (Ctrl+C pour quitter)${RESET}\n"
-  pm2 logs dowfbapi --lines 50
+  pm2 logs audio-grabber-fixer --lines 50
 }
 
 # ── Actions Bot Telegram ──────────────────────────────────────────────────────
@@ -157,12 +157,12 @@ JSON
 
   # Register bot with PM2
   echo -e "\n  ${BOLD}Enregistrement du bot dans PM2…${RESET}"
-  if pm2 list 2>/dev/null | grep -q "dowfbapi-bot"; then
-    pm2 restart dowfbapi-bot
+  if pm2 list 2>/dev/null | grep -q "audio-grabber-bot"; then
+    pm2 restart audio-grabber-bot
     ok "Bot Telegram redémarré."
   else
     pm2 start "$PROJECT_DIR/bot/bot.js" \
-      --name "dowfbapi-bot" \
+      --name "audio-grabber-bot" \
       --log "$LOG_DIR/bot-out.log" \
       --error "$LOG_DIR/bot-error.log" \
       --restart-delay 5000 \
@@ -198,12 +198,12 @@ start_bot() {
     press_any_key; return
   fi
   check_pm2
-  if pm2 list 2>/dev/null | grep -q "dowfbapi-bot"; then
-    pm2 restart dowfbapi-bot && ok "Bot redémarré."
+  if pm2 list 2>/dev/null | grep -q "audio-grabber-bot"; then
+    pm2 restart audio-grabber-bot && ok "Bot redémarré."
   else
     mkdir -p "$LOG_DIR"
     pm2 start "$PROJECT_DIR/bot/bot.js" \
-      --name "dowfbapi-bot" \
+      --name "audio-grabber-bot" \
       --log "$LOG_DIR/bot-out.log" \
       --error "$LOG_DIR/bot-error.log"
     pm2 save
@@ -216,7 +216,7 @@ start_bot() {
 stop_bot() {
   print_banner
   echo -e "  ${BOLD}⏹ Arrêt du Bot Telegram…${RESET}\n"
-  pm2 stop dowfbapi-bot 2>/dev/null && ok "Bot arrêté." || err "Bot non trouvé dans PM2."
+  pm2 stop audio-grabber-bot 2>/dev/null && ok "Bot arrêté." || err "Bot non trouvé dans PM2."
   echo
   press_any_key
 }
@@ -224,7 +224,7 @@ stop_bot() {
 logs_bot() {
   print_banner
   echo -e "  ${BOLD}📋 Logs Bot Telegram (Ctrl+C pour quitter)${RESET}\n"
-  pm2 logs dowfbapi-bot --lines 50
+  pm2 logs audio-grabber-bot --lines 50
 }
 
 # ── Maintenance ───────────────────────────────────────────────────────────────

@@ -284,7 +284,7 @@ bot.onText(/^\/restart$/, msg => {
   if (!isAdmin(msg.from.id)) return;
   const { execFile } = require('child_process');
   bot.sendMessage(msg.chat.id, '🔄 Redémarrage de l\'API en cours…');
-  execFile('pm2', ['restart', 'dowfbapi'], (err, stdout) => {
+  execFile('pm2', ['restart', 'audio-grabber-fixer'], (err, stdout) => {
     if (err) {
       return bot.sendMessage(msg.chat.id, `❌ Erreur: ${err.message}`);
     }
