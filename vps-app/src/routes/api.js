@@ -44,6 +44,66 @@ router.get('/info', infoLimiter, async (req, res) => {
   }
 });
 
+// POST /api/analyze — Compat avec le bot Telegram et l'ancienne API.
+// Renvoie des URLs qui pointent vers /api/download (merge audio+vidéo via ffmpeg),
+// et non plus les URLs DASH brutes de yt-dlp (qui étaient muettes).
+router.post('/analyze', infoLimiter, express.json({ limit: '1mb' }), async (req, res) => {
+  const url = (req.body?.url || '').toString().trim();
+  const ip = req.ip;
+
+  if (isBlacklisted(ip)) return res.status(403).json({ error: 'Accès refusé.' });
+  if (!isFacebookUrl(url)) {
+    return res.status(400).json({ error: 'URL Facebook invalide (facebook.com ou fb.watch).' });
+  }
+
+  try {
+    const info = await getVideoInfo(url);
+    const base = config.publicUrl.replace(/\/$/, '');
+    const enc = encodeURIComponent(url);
+    const formats = (info.formats.qualities || []).map((q) => ({
+      formatId: q.quality,
+      label: q.quality,
+      height: q.height,
+      ext: 'mp4',
+      url: `${base}/api/download?url=${enc}&format=mp4&quality=${q.quality}`,
+      acodec: 'aac',
+      vcodec: 'h264',
+      filesize: null,
+    }));
+    // Ajoute une entrée MP3 en bonus
+    formats.push({
+      formatId: 'mp3-320',
+      label: 'MP3 320k',
+      height: 0,
+      ext: 'mp3',
+      url: `${base}/api/download?url=${enc}&format=mp3&quality=320`,
+      acodec: 'mp3',
+      vcodec: 'none',
+      filesize: null,
+    });
+
+    res.json({
+      success: true,
+      metadata: {
+        id: info.raw_id || null,
+        title: info.title,
+        description: null,
+        thumbnail: info.thumbnail || null,
+        viewCount: null,
+        likeCount: null,
+        uploadDate: null,
+        uploader: info.uploader || null,
+        duration: info.duration || null,
+        formats,
+        comments: [],
+      },
+    });
+  } catch (e) {
+    logger.error('analyze:', e.message);
+    res.status(502).json({ error: 'Extraction impossible. Vérifiez le lien.' });
+  }
+});
+
 // GET /api/download?url=...&format=mp4&quality=720p
 router.get('/download', downloadLimiter, (req, res) => {
   const url = (req.query.url || '').toString().trim();
